@@ -1,0 +1,13 @@
+quarkus:
+  rest-client:
+    gitlab-api:
+      url: ${GITLAB_URL}
+
+gitlab:
+  auth:
+    token: ${GITLAB_TOKEN}
+
+pmd:
+  path: ${PMD_PATH}
+  ruleset: ${PMD_RULESET}
+  suppressions: ${PMD_SUPPRESSIONS}

@@ -24,6 +24,7 @@ import java.util.Map;
  *     <li>Filters for Java source files</li>
  *     <li>Fetches file content based on target ref</li>
  *     <li>Runs PMD analysis on the content</li>
+ *     <li>Requests AI recommendations based on violations (if any)</li>
  *     <li>Posts the formatted result back to the merge request as a comment</li>
  * </ul>
  */
@@ -41,6 +42,9 @@ public class GitLabService {
 
     @Inject
     PmdConfigProperties pmdProperties;
+
+    @Inject
+    AiRecommendationService aiRecommendationService;
 
     @Inject
     @RestClient
@@ -76,7 +80,14 @@ public class GitLabService {
                 PmdConfig config = createPmdConfig(path, content);
                 PmdResponse response = pmdService.runPmd(config);
 
-                commentPublisher.publish(context, response.getFormattedOutput());
+                StringBuilder enhancedOutput = new StringBuilder(response.getFormattedOutput());
+
+                if (!response.getViolations().isEmpty()) {
+                    String aiSuggestions = aiRecommendationService.getRecommendation(response.getViolations(), content);
+                    enhancedOutput.append("\n\n🧠 AI Recommendations:\n").append(aiSuggestions);
+                }
+
+                commentPublisher.publish(context, enhancedOutput.toString());
             } catch (Exception e) {
                 log.errorf("Failed to analyze file %s: %s", path, e.getMessage());
             }

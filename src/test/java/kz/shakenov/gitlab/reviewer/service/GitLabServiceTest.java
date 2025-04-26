@@ -25,6 +25,7 @@ class GitLabServiceTest {
     private GitLabCommentPublisher commentPublisher;
     private PmdConfigProperties pmdProps;
     private PmdService pmdService;
+    private AiRecommendationService aiRecommendationService;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -34,6 +35,7 @@ class GitLabServiceTest {
         commentPublisher = mock(GitLabCommentPublisher.class);
         pmdProps = mock(PmdConfigProperties.class);
         pmdService = mock(PmdService.class);
+        aiRecommendationService = mock(AiRecommendationService.class);
 
         Field field = GitLabService.class.getDeclaredField("pmdService");
         field.setAccessible(true);
@@ -43,33 +45,33 @@ class GitLabServiceTest {
         service.diffParser = diffParser;
         service.commentPublisher = commentPublisher;
         service.pmdProperties = pmdProps;
+        service.aiRecommendationService = aiRecommendationService;
     }
 
     @Test
     void testAnalyzeMergeRequest_shouldPostPmdResults() {
         GitLabMRContext context = new GitLabMRContext(123, 456, "main");
 
-        // Mock API response with file change
         Map<String, Object> changesJson = Map.of("changes", List.of(Map.of("new_path", "src/Test.java")));
         when(apiClient.getMergeRequestChanges(123, 456)).thenReturn(changesJson);
         when(diffParser.extractModifiedPaths(changesJson)).thenReturn(List.of("src/Test.java"));
 
-        // Mock file content
         String base64Code = Base64.getEncoder().encodeToString("public class Test {}".getBytes());
         when(apiClient.getFileContent(123, "src/Test.java", "main"))
                 .thenReturn(Map.of("content", base64Code));
 
-        // Mock PMD config properties
         when(pmdProps.path()).thenReturn("/fake/pmd");
         when(pmdProps.ruleset()).thenReturn("/fake/ruleset.xml");
         when(pmdProps.suppressions()).thenReturn("/fake/suppress.xml");
 
-        // Stub runPmd
         var mockResponse = new PmdResponse("raw", "formatted output", List.of(new PmdViolation("Rule", "desc", 1, "class")));
         when(pmdService.runPmd(any(PmdConfig.class))).thenReturn(mockResponse);
 
+        when(aiRecommendationService.getRecommendation(any(), any()))
+                .thenReturn("AI suggestion text");
+
         service.analyzeMergeRequest(context);
 
-        verify(commentPublisher).publish(eq(context), contains("formatted output"));
+        verify(commentPublisher).publish(eq(context), contains("AI suggestion text"));
     }
 }

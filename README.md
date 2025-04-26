@@ -1,16 +1,18 @@
 Gitlab Reviewer 🤖
 ======================
 
-**Gitlab Reviewer** is an automated static analysis tool for GitLab. It uses PMD to analyze Java code in merge requests and automatically comments on violations directly in the MR.
+**Gitlab Reviewer** is an automated static analysis tool for GitLab. It uses PMD to analyze Java code in merge requests and provides AI-powered recommendations with contextual suggestions for improvements — all posted directly as comments on the merge request.
 
 This tool was designed as a lightweight, centralized solution to avoid integrating PMD and linters into dozens (or hundreds) of existing projects. Instead of modifying each repository's build or CI pipeline, Gitlab Reviewer offers a single point of analysis with consistent results.
 
-The current version provides a minimal integration — it runs PMD, formats the output, and posts results. However, the architecture allows further customization: filtering specific rules, modifying the output, or injecting custom analysis logic.
+The architecture allows further customization: filtering specific rules, modifying the output, or injecting custom analysis logic.
 
 🚀 Features
 -----------
 - Supports GitLab (REST API v4)
 - Integrates with PMD 7.x
+- AI-powered recommendations using **Ollama** (e.g., DeepSeek models)
+- Posts formatted violations and suggestions as **MR comments**
 - Posts violations as comments in merge requests
 - REST endpoint to receive GitLab webhooks
 - Supports both:
@@ -30,6 +32,14 @@ cp .env.example .env
 # Gitlab API
 GITLAB_URL=https://gitlab.com
 GITLAB_TOKEN=glpat-your-gitlab-token-here
+
+# Ollama API
+OLLAMA_API_URL=http://ollama.host:11434
+OLLAMA_MODEL=deepseek-coder:6.7b
+OLLAMA_TEMPERATURE=0.2
+OLLAMA_PROMPT_PATH=/absolute/path/to/prompt-template.txt
+OLLAMA_CONNECT_TIMEOUT=5000
+OLLAMA_READ_TIMEOUT=60000
 
 # PMD Configuration
 PMD_PATH=/absolute/path/to/pmd
